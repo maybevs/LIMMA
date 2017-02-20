@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using LIMMA.Interfaces;
+using LIMMA.Services;
 using LIMMA.ViewModels;
 using LIMMA.Views;
+using Microsoft.Practices.Unity;
 using Prism.Unity;
 using Xamarin.Forms;
 
@@ -54,7 +57,14 @@ namespace LIMMA
         {
             Container.RegisterTypeForNavigation<MainPage, MainPageViewModel>("MainPage");
 
-            
+            ConnectionService connector = new ConnectionService();
+            Container.RegisterInstance<IConnectionServices>("Connector",connector);
+            Container.RegisterType<IConnectionServices, ConnectionService>();
+
+
+
+
         }
     }
+
 }
