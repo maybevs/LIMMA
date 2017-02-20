@@ -2,29 +2,31 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-
+using LIMMA.ViewModels;
+using LIMMA.Views;
+using Prism.Unity;
 using Xamarin.Forms;
 
 namespace LIMMA
 {
-    public class App : Application
+    public class App : PrismApplication
     {
         public App()
         {
             // The root page of your application
-            MainPage = new ContentPage
-            {
-                Content = new StackLayout
-                {
-                    VerticalOptions = LayoutOptions.Center,
-                    Children = {
-                        new Label {
-                            HorizontalTextAlignment = TextAlignment.Center,
-                            Text = "Welcome to Xamarin Forms!"
-                        }
-                    }
-                }
-            };
+            //MainPage = new ContentPage
+            //{
+            //    Content = new StackLayout
+            //    {
+            //        VerticalOptions = LayoutOptions.Center,
+            //        Children = {
+            //            new Label {
+            //                HorizontalTextAlignment = TextAlignment.Center,
+            //                Text = "Welcome to Xamarin Forms!"
+            //            }
+            //        }
+            //    }
+            //};
         }
 
         protected override void OnStart()
@@ -40,6 +42,19 @@ namespace LIMMA
         protected override void OnResume()
         {
             // Handle when your app resumes
+        }
+
+        protected override void OnInitialized()
+        {
+            
+            NavigationService.NavigateAsync("MainPage");
+        }
+
+        protected override void RegisterTypes()
+        {
+            Container.RegisterTypeForNavigation<MainPage, MainPageViewModel>("MainPage");
+
+            
         }
     }
 }
