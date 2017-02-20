@@ -9,9 +9,13 @@ namespace LIMMA.Services
 {
     public class ConnectionService : IConnectionServices
     {
-        public string GetConnection()
+        public async Task<string> GetConnection(IConfiguration config)
         {
-            return "Hallo Welt";
+            var response = await Helper.UserToken.UpdateToken(config);
+
+
+            return response;
         }
+
     }
 }

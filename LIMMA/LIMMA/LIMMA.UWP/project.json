@@ -1,6 +1,7 @@
 ﻿{
   "dependencies": {
     "Microsoft.NETCore.UniversalWindowsPlatform": "5.0.0",
+    "Newtonsoft.Json": "9.0.1",
     "Prism.Forms": "6.2.0",
     "Prism.Unity.Forms": "6.2.0",
     "Xamarin.Forms": "2.0.0.6482"

@@ -1,7 +1,9 @@
-﻿namespace LIMMA.Interfaces
+﻿using System.Threading.Tasks;
+
+namespace LIMMA.Interfaces
 {
     public interface IConnectionServices
     {
-        string GetConnection();
+        Task<string> GetConnection(IConfiguration config);
     }
 }

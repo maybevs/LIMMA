@@ -12,9 +12,10 @@ namespace LIMMA.ViewModels
     {
         public string TestString { get; set; }
         
-        public MainPageViewModel(IConnectionServices connection)
+        public MainPageViewModel(IConnectionServices connection, IConfiguration config)
         {
-            TestString = connection.GetConnection();
+            TestString = connection.GetConnection(config).Result;
         }
+
     }
 }

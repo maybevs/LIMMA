@@ -53,14 +53,36 @@ namespace LIMMA
             NavigationService.NavigateAsync("MainPage");
         }
 
-        protected override void RegisterTypes()
+        /// <summary>
+        /// In RegisterTypes we'll do everything that needs to be globally available. This includes setting up our Navigation as well as our Backendconnections.
+        /// </summary>
+        protected override async void RegisterTypes()
         {
+            //Navigation Registration
+            //Todo: Extend for generated Pages
             Container.RegisterTypeForNavigation<MainPage, MainPageViewModel>("MainPage");
 
+
+            //Service Initialisation
             ConnectionService connector = new ConnectionService();
+            ConfigurationService configurator = new ConfigurationService();
+
+
+            //DependencyInjection Init
+            // ConnectionService
             Container.RegisterInstance<IConnectionServices>("Connector",connector);
             Container.RegisterType<IConnectionServices, ConnectionService>();
 
+            // ConfigurationService
+            Container.RegisterInstance<IConfiguration>("Config", configurator);
+            Container.RegisterType<IConfiguration, ConfigurationService>();
+
+
+            //Test
+
+            var response = await Helper.UserToken.GetToken(configurator);
+
+            string s = response.Token;
 
 
 
