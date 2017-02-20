@@ -80,9 +80,7 @@ namespace LIMMA
 
             //Test
 
-            var response = await Helper.UserToken.GetToken(configurator);
-
-            string s = response.Token;
+            
 
 
 
