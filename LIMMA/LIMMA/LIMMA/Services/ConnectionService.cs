@@ -59,7 +59,7 @@ namespace LIMMA.Services
                 token.TokenPrefix = storedToken.TokenPrefix;
 
                 var s = token.Expires;
-
+                // Probably there is a nicer way available, but well it works for reformatting
                 var date = s.Split(' ')[0];
                 var year = date.Split('/')[2];
                 var month = date.Split('/')[0];
