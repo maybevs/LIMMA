@@ -58,7 +58,16 @@ namespace LIMMA.Services
                 token.Success = storedToken.Success;
                 token.TokenPrefix = storedToken.TokenPrefix;
 
-                if (Convert.ToDateTime(token.Expires) >= DateTime.Now)
+                var s = token.Expires;
+
+                var date = s.Split(' ')[0];
+                var year = date.Split('/')[2];
+                var month = date.Split('/')[0];
+                var day = date.Split('/')[1];
+                var time = s.Split(' ')[1];
+                var dt = $"{year}/{month}/{day} {time}";
+
+                if (DateTime.Parse(dt) >= DateTime.Now)
                 {
                     Debug.WriteLine("GetCurrentToken - Updating Token");
                     token =

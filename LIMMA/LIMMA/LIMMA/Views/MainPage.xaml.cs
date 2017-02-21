@@ -15,7 +15,29 @@ namespace LIMMA.Views
         {
             InitializeComponent();
 
+            //Todo: Read Configuration
+
+
+            Title = "Window Title"; //Title
+            BackgroundColor = Color.FromHex("#FFFFFF"); //Color
+                                                        //BackgroundImage = 
+
+            ContentView content = new ContentView();
+            StackLayout layout = new StackLayout();
+
+            var items = Helper.ViewsGenerator.GenerateViewTest();
+
+            foreach (var item in items)
+            {
+                layout.Children.Add(item);
+                
+            }
+
+            content.Content = layout;
             
+
+
+            this.Content = content;
         }
 
         

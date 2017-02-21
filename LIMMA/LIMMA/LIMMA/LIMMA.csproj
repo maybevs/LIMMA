@@ -43,6 +43,7 @@
     <Compile Include="Auth\WebApiRequest.cs" />
     <Compile Include="Data\LocalStorage.cs" />
     <Compile Include="Helper\UserToken.cs" />
+    <Compile Include="Helper\ViewsGenerator.cs" />
     <Compile Include="Interfaces\IConfiguration.cs" />
     <Compile Include="Interfaces\IConnectionServices.cs" />
     <Compile Include="Interfaces\IFileServices.cs" />
@@ -53,7 +54,7 @@
     <Compile Include="Views\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\SingleValueView.cs" />
+    <Compile Include="Views\SingleValue.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="GettingStarted.Xamarin" />

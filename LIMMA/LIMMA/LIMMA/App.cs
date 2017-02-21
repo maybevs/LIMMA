@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -69,19 +70,18 @@ namespace LIMMA
         /// </summary>
         protected override async void RegisterTypes()
         {
-            //Navigation Registration
-            //Todo: Extend for generated Pages
-            Container.RegisterTypeForNavigation<MainPage, MainPageViewModel>("MainPage");
+            
 
 
             //Service Initialisation
-            
+            Debug.WriteLine("Setting up Services");
             ConfigurationService configurator = new ConfigurationService();
             ConnectionService connector = new ConnectionService();
 
 
             //DependencyInjection Init
             // ConnectionService
+            Debug.WriteLine("Registering Services");
             Container.RegisterInstance<IConnectionServices>("Connector",connector);
             Container.RegisterType<IConnectionServices, ConnectionService>();
 
@@ -89,6 +89,11 @@ namespace LIMMA
             Container.RegisterInstance<IConfiguration>("Config", configurator);
             Container.RegisterType<IConfiguration, ConfigurationService>();
 
+
+            Debug.WriteLine("Registering Navigation");
+            //Navigation Registration
+            //Todo: Extend for generated Pages
+            Container.RegisterTypeForNavigation<MainPage, MainPageViewModel>("MainPage");
 
             //Test
             var token = await connector.GetCurrentToken(configurator);
