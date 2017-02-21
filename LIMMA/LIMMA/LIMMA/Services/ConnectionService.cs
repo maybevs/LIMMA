@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using LIMMA.Helper;
 using LIMMA.Interfaces;
+using Newtonsoft.Json;
+using Xamarin.Forms;
 
 namespace LIMMA.Services
 {
@@ -15,25 +18,65 @@ namespace LIMMA.Services
         {
             //var response = await Helper.UserToken.UpdateToken(config);
 
+            
+
 
             return "";
         }
 
-        public ConnectionService(IConfiguration config)
+        public async Task<UserToken> GetUserToken(IConfiguration config)
         {
-
-        }
-
-        public async Task<UserToken> GetToken(IConfiguration config)
-        {
-            //Todo: Check if token is in Storage, else get a new one.
-            //Todo: If approach exp. Date renew.
 
 
             var response = await Helper.UserToken.GetToken(config);
 
             return response;
-            
+        }
+
+        public async Task<UserToken> UpdateUserToken(IConfiguration config, UserToken token)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ConnectionService()
+        {
+            //UserToken = GetCurrentToken(config).Result;
+            UserToken = new UserToken();
+        }
+
+        public async Task<UserToken> GetCurrentToken(IConfiguration config)
+        {
+            Debug.WriteLine("GetCurrentToken - Started");
+            UserToken token = new UserToken();
+            if (Application.Current.Properties.ContainsKey("Token"))
+            {
+                Debug.WriteLine("GetCurrentToken - LocalToken Found");
+
+                dynamic storedToken = JsonConvert.DeserializeObject(Application.Current.Properties["Token"].ToString());
+                token.Token = storedToken.Token;
+                token.Expires = storedToken.Expires;
+                token.Success = storedToken.Success;
+                token.TokenPrefix = storedToken.TokenPrefix;
+
+                if (Convert.ToDateTime(token.Expires) >= DateTime.Now)
+                {
+                    Debug.WriteLine("GetCurrentToken - Updating Token");
+                    token =
+                        await
+                            UpdateUserToken(
+                                config, token);
+                    this.UserToken = token;
+                    Application.Current.Properties["Token"] = JsonConvert.SerializeObject(token);
+                    return token;
+                }
+
+            }
+            Debug.WriteLine("GetCurrentToken - Requesting new Token");
+            token = await GetUserToken(config);
+            Application.Current.Properties["Token"] = JsonConvert.SerializeObject(token);
+            this.UserToken = token;
+            return token;
+
         }
 
     }

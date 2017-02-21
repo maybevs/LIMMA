@@ -2,11 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
+using LIMMA.Data;
+using LIMMA.Helper;
 using LIMMA.Interfaces;
 using LIMMA.Services;
 using LIMMA.ViewModels;
 using LIMMA.Views;
 using Microsoft.Practices.Unity;
+using Microsoft.Practices.Unity.ObjectBuilder;
+using Newtonsoft.Json;
 using Prism.Unity;
 using Xamarin.Forms;
 
@@ -14,6 +19,7 @@ namespace LIMMA
 {
     public class App : PrismApplication
     {
+        static LocalStorage storage;
         public App()
         {
             // The root page of your application
@@ -31,6 +37,11 @@ namespace LIMMA
             //    }
             //};
         }
+
+        public static LocalStorage Storage => storage ??
+                                              (storage =
+                                                  new LocalStorage(
+                                                      DependencyService.Get<IFileHelper>().GetLocalFilePath("LocalStorageSQLite.db3")));
 
         protected override void OnStart()
         {
@@ -64,8 +75,9 @@ namespace LIMMA
 
 
             //Service Initialisation
-            ConnectionService connector = new ConnectionService();
+            
             ConfigurationService configurator = new ConfigurationService();
+            ConnectionService connector = new ConnectionService();
 
 
             //DependencyInjection Init
@@ -79,12 +91,15 @@ namespace LIMMA
 
 
             //Test
+            var token = await connector.GetCurrentToken(configurator);
 
-            
+            string s = "";
 
 
 
         }
+
+        
     }
 
 }

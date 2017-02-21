@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -9,12 +10,15 @@ using System.Threading.Tasks;
 using LIMMA.Interfaces;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using SQLite.Net.Attributes;
 
 
 namespace LIMMA.Helper
 {
     public class UserToken
     {
+        [PrimaryKey, AutoIncrement]
+        public int ID { get; set; }
         public bool Success { get; set; }
         public string Token { get; set; }
         public string Expires { get; set; }
@@ -58,7 +62,7 @@ namespace LIMMA.Helper
 
         public static async Task<UserToken> GetToken(IConfiguration config)
         {
-            
+            Debug.WriteLine("UserToken - GetToken Started");
             HttpClient client = new HttpClient();
             //client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authHeaderValue);
             client.BaseAddress = new Uri(config.BaseUrl);
@@ -73,10 +77,15 @@ namespace LIMMA.Helper
             string body = JsonConvert.SerializeObject(auth);
             HttpContent bodyContent = new StringContent(body);
             bodyContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
-            var response = await client.PostAsync(config.BaseUrl + "/api/cms/membership-user/token", bodyContent);
+            Debug.WriteLine("UserToken - Request created");
+            Debug.WriteLine("UserToken - Requesting Token...");
+            client.Timeout = TimeSpan.FromSeconds(10);
+            var response = await client.PostAsync(config.BaseUrl + "api/cms/membership-user/token", bodyContent);
+            Debug.WriteLine("UserToken - Response Received.");
 
             if (response.IsSuccessStatusCode)
             {
+                Debug.WriteLine("UserToken - Token Successful");
                 var readableResponse = await ((StreamContent) response.Content).ReadAsStringAsync();
                 dynamic token = JsonConvert.DeserializeObject(readableResponse);
                 UserToken utoken = new UserToken();
