@@ -16,6 +16,7 @@ using Microsoft.Practices.Unity.ObjectBuilder;
 using Newtonsoft.Json;
 using Prism.Unity;
 using Xamarin.Forms;
+using System.Threading;
 
 namespace LIMMA
 {
@@ -137,7 +138,7 @@ namespace LIMMA
                 switch (mainpageChild.WidgetTypeID)
                 {
                     case "57562e4a-8d89-47d1-94ae-a0a1feb206f1":
-                        SingleValue sv = new SingleValue("c326141e-3e9e-489f-85d2-387208629be0",mainpageChild.Model.Settings);
+                        SingleValue sv = new SingleValue(mainpageChild.ID,mainpageChild.Model.Settings);
 
                         //Label l = new Label();
                         
@@ -155,6 +156,8 @@ namespace LIMMA
 
             MainPage = generatedMain;
 
+            Device.StartTimer(TimeSpan.FromSeconds(5),Tick);
+
             foreach (var child in ((StackLayout)((ContentPage)MainPage).Content).Children)
             {
                 if (child.GetType() == typeof(SingleValue))
@@ -169,6 +172,26 @@ namespace LIMMA
 
         }
 
+        private bool Tick()
+        {
+            foreach (var widgetBinding in widgetBindings)
+            {
+               foreach (var child in ((StackLayout)((ContentPage)MainPage).Content).Children)
+               {
+                   if (child.GetType() == typeof(SingleValue))
+                   {
+                       if (((SingleValue)child).Name == widgetBinding.WidgetID.ToString())
+                       {
+                           ((SingleValue)child).TextDisplay.Text = DateTime.Now.ToString();
+                       }
+                   }
+               }
+                
+            }
+
+            return true;
+        }
+
         private List<WidgetBinding> GetAllBindings(Node root)
         {
             List<WidgetBinding> bindings = new List<WidgetBinding>();
@@ -177,6 +200,7 @@ namespace LIMMA
 
             if (nodebindings != null)
             {
+                //NodeBindings nbs = new NodeBindings();
                 foreach (var nodebinding in nodebindings)
                 {
                     WidgetBinding wb = new WidgetBinding(Guid.Parse(nodebinding.WidgetID), new List<TargetBinding>
