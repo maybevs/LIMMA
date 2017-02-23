@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using LIMMA.Models;
 using LIMMA.Views;
 using Xamarin.Forms;
 
@@ -26,7 +27,7 @@ namespace LIMMA.Helper
                 Content = new Label() { Text = "Label3"}
             };
 
-            SingleValue sv = new SingleValue();
+            SingleValue sv = new SingleValue("fu", new Settings());
 
             views.Add(test);
             views.Add(test2);

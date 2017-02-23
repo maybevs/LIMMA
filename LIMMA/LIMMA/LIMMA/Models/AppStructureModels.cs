@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using LIMMA.Interfaces;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace LIMMA.Models
 {
@@ -64,13 +67,14 @@ namespace LIMMA.Models
 
     public class WidgetModel
     {
-        public WidgetSettings WidgetSettings { get; set; }
+        public Settings Settings { get; set; }
     }
-
-    public class WidgetSettings
+    
+    
+    public class Settings
     {
         public string Height { get; set; }
-        public int FontSize { get; set; }
+        public string FontSize { get; set; }
         public string Color { get; set; }
         public string BackgroundImage { get; set; }
         public string BackgroundColor { get; set; }
@@ -79,26 +83,26 @@ namespace LIMMA.Models
         public string MarginTop { get; set; }
         public string PaddingLeft { get; set; }
         public string PaddingRight { get; set; }
-        public int TextAlign { get; set; }
+        public string TextAlign { get; set; }
         public string Brand { get; set; }
         public string NavPaddingTop { get; set; }
         public bool KeepPageParameters { get; set; }
         public bool IsInverse { get; set; }
         public string StartingNodeGuid { get; set; }
-        public int NavStyle { get; set; }
-        public int Alignment { get; set; }
-        public int Style { get; set; }
+        public string NavStyle { get; set; }
+        public string Alignment { get; set; }
+        public string Style { get; set; }
         public List<Column> Columns { get; set; }
         public string Keywords { get; set; }
         public CustomSettings CustomSettings { get; set; }
         public ContentSettings ContentSettings { get; set; }
-        public NodeReference Children { get; set; }
-        public NodeReference HeaderChildren { get; set; }
-        public NodeReference FooterChildren { get; set; }
+        //public NodeReference Children { get; set; }
+        //public NodeReference HeaderChildren { get; set; }
+        //public NodeReference FooterChildren { get; set; }
         public bool IsContentPadded { get; set; }
-        public string Header { get; set; }
-        public string Footer { get; set; }
-        public int BreaksBelow { get; set; }
+        public HeaderOrFooter Header { get; set; }
+        public HeaderOrFooter Footer { get; set; }
+        public string BreaksBelow { get; set; }
 
     }
 
@@ -165,7 +169,7 @@ namespace LIMMA.Models
 
     public class NodeDataSources
     {
-        public List<IDataSource> Sources { get; set; }
+        //public List<IDataSource> Sources { get; set; }
         public List<NodeBindings> Bindings { get; set; }
     }
 }

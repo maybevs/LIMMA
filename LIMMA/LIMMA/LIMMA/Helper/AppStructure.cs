@@ -29,18 +29,43 @@ namespace LIMMA.Helper
 
 
             HttpClient client = new HttpClient();
-            client.DefaultRequestHeaders.Add("Authorization",token.TokenPrefix + token.Token);
+            client.DefaultRequestHeaders.Add("Authorization", token.TokenPrefix + token.Token);
 
             var result =
                 await
                     client.GetStringAsync(config.BaseUrl + "api/imma/application/AD23BF06-7EB3-4669-9157-74A9B4EF2611");
 
-            dynamic asdf = JsonConvert.DeserializeObject(result);
+            var asdf = ((Tenant) JsonConvert.DeserializeObject(result, typeof(Tenant)));
 
             AppStructure app = new AppStructure();
+            app.Tenant = asdf;
 
 
             return app;
         }
     }
+
+    public static class AppStructureHelpers
+    {
+        public static Color GetColor(string settingsBackgroundColor)
+        {
+            if (String.IsNullOrEmpty(settingsBackgroundColor))
+            {
+                return Color.White;
+            }
+
+            int r;
+            int b;
+            int g;
+
+            var split = settingsBackgroundColor.Split(',');
+            r = Convert.ToInt32(split[0].Split('(')[1]);
+            g = Convert.ToInt32(split[1]);
+            b = Convert.ToInt32(split[2].Split(')')[0]);
+
+            return Color.FromRgb(r, g, b);
+
+        }
+    }
 }
+

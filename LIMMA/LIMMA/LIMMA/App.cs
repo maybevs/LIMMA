@@ -102,11 +102,70 @@ namespace LIMMA
 
             string s = "";
 
+            GenerateMain(structure);
+
 
 
         }
 
-        
+        private void GenerateMain(AppStructure structure)
+        {
+
+            ContentPage generatedMain = new ContentPage()
+            {
+                Title = "Hallo Welt!"
+            };
+
+            StackLayout root = new StackLayout();
+            root.Orientation = StackOrientation.Vertical;
+
+            var mainpageChildren =
+                structure.Tenant.RootNode.Children.FirstOrDefault().Children.FirstOrDefault().Page.RootWidget.Children;
+
+
+            /*
+             * WidgetTypes:
+             * Navigation: 3cb0c700-5b55-4563-81f5-576e1a31271a
+             * SingleValue: 57562e4a-8d89-47d1-94ae-a0a1feb206f1
+             */
+
+
+            foreach (var mainpageChild in mainpageChildren)
+            {
+                switch (mainpageChild.WidgetTypeID)
+                {
+                    case "57562e4a-8d89-47d1-94ae-a0a1feb206f1":
+                        SingleValue sv = new SingleValue("c326141e-3e9e-489f-85d2-387208629be0",mainpageChild.Model.Settings);
+
+                        //Label l = new Label();
+                        
+                        //l.BackgroundColor = GetColor(mainpageChild.Model.Settings.BackgroundColor);
+                        //l.Text = "1234567890ßßßßßßßßßßßß";
+                        root.Children.Add(sv);
+                        break;
+                }
+            }
+
+            generatedMain.Content = root;
+
+            
+
+            
+            MainPage = generatedMain;
+
+            foreach (var child in ((StackLayout)((ContentPage)MainPage).Content).Children)
+            {
+                if (child.GetType() == typeof(SingleValue))
+                {
+                    if (((SingleValue)child).Name == "c326141e-3e9e-489f-85d2-387208629be0")
+                    {
+                        ((SingleValue)child).TextDisplay.Text = "trolololollolollolo";
+                    }
+                }
+            }
+
+
+        }
     }
 
 }
