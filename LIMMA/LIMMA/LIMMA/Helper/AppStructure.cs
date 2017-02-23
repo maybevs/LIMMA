@@ -35,10 +35,9 @@ namespace LIMMA.Helper
                 await
                     client.GetStringAsync(config.BaseUrl + "api/imma/application/AD23BF06-7EB3-4669-9157-74A9B4EF2611");
 
-            var asdf = ((Tenant) JsonConvert.DeserializeObject(result, typeof(Tenant)));
+            var asdf = (Tenant) JsonConvert.DeserializeObject(result, typeof(Tenant));
 
-            AppStructure app = new AppStructure();
-            app.Tenant = asdf;
+            AppStructure app = new AppStructure {Tenant = asdf};
 
 
             return app;

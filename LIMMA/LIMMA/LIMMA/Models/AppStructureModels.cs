@@ -103,6 +103,7 @@ namespace LIMMA.Models
         public HeaderOrFooter Header { get; set; }
         public HeaderOrFooter Footer { get; set; }
         public string BreaksBelow { get; set; }
+        public List<Binding> Bindings { get; set; }
 
     }
 
@@ -120,8 +121,8 @@ namespace LIMMA.Models
 
     public class CustomSettings
     {
-        public string ID { get; set; }
-        public Sources Sources { get; set; }
+        public List<Sources> Sources { get; set; }
+        public List<Binding> Bindings { get; set; }
     }
 
     public class Sources
@@ -136,10 +137,10 @@ namespace LIMMA.Models
 
     public class Binding
     {
-        public string DataSource { get; set; }
+        public string DataSourceID { get; set; }
         public string Expression { get; set; }
-        public string Widget { get; set; }
-        public string BindingTarget { get; set; }
+        public string WidgetID { get; set; }
+        public string BindingTargetID { get; set; }
     }
 
     public class Value
@@ -170,6 +171,6 @@ namespace LIMMA.Models
     public class NodeDataSources
     {
         //public List<IDataSource> Sources { get; set; }
-        public List<NodeBindings> Bindings { get; set; }
+        public List<Binding> Bindings { get; set; }
     }
 }
