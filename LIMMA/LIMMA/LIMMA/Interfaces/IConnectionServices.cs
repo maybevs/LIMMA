@@ -12,5 +12,7 @@ namespace LIMMA.Interfaces
 
         Task<UserToken> UpdateUserToken(IConfiguration config, UserToken token);
         Task<UserToken> GetCurrentToken(IConfiguration config);
+
+        Task<AppStructure> GetAppStructure(IConfiguration config);
     }
 }

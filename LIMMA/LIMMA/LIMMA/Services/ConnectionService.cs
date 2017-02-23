@@ -88,5 +88,15 @@ namespace LIMMA.Services
 
         }
 
+        public Task<AppStructure> GetAppStructure(IConfiguration config)
+        {
+            Debug.WriteLine("GetAppStructure - Started");
+
+            var structure = AppStructure.GetAppStructure(config);
+
+            return structure;
+            
+
+        }
     }
 }

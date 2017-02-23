@@ -98,6 +98,8 @@ namespace LIMMA
             //Test
             var token = await connector.GetCurrentToken(configurator);
 
+            var structure = await connector.GetAppStructure(configurator);
+
             string s = "";
 
 
