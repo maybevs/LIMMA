@@ -109,6 +109,7 @@ namespace LIMMA
 
         }
 
+        private List<WidgetBinding> widgetBindings;
         private void GenerateMain(AppStructure structure)
         {
 
@@ -149,9 +150,9 @@ namespace LIMMA
 
             generatedMain.Content = root;
 
-            
+            widgetBindings =  GetAllBindings(structure.Tenant.RootNode);
 
-            
+
             MainPage = generatedMain;
 
             foreach (var child in ((StackLayout)((ContentPage)MainPage).Content).Children)
@@ -166,6 +167,37 @@ namespace LIMMA
             }
 
 
+        }
+
+        private List<WidgetBinding> GetAllBindings(Node root)
+        {
+            List<WidgetBinding> bindings = new List<WidgetBinding>();
+
+            var nodebindings = root.NodeDataSources.Bindings;
+
+            if (nodebindings != null)
+            {
+                foreach (var nodebinding in nodebindings)
+                {
+                    WidgetBinding wb = new WidgetBinding(Guid.Parse(nodebinding.WidgetID), new List<TargetBinding>
+                    {
+                        new TargetBinding(Guid.Parse(nodebinding.DataSourceID), Guid.Parse(nodebinding.BindingTargetID),
+                            nodebinding.Expression)
+                    });
+
+                    bindings.Add(wb);
+                }
+            }
+
+            if (root.Children.Count > 0)
+            {
+                foreach (var child in root.Children)
+                {
+                    bindings.AddRange(GetAllBindings(child));
+                }
+            }
+            
+            return bindings;
         }
 
         private async void GetData(Settings RootModelSettings)
