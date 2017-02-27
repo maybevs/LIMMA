@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using LIMMA.Data;
@@ -67,6 +68,8 @@ namespace LIMMA
             NavigationService.NavigateAsync("MainPage");
         }
 
+        private static ConfigurationService configurator;
+        private static ConnectionService connector;
         /// <summary>
         /// In RegisterTypes we'll do everything that needs to be globally available. This includes setting up our Navigation as well as our Backendconnections.
         /// </summary>
@@ -77,8 +80,8 @@ namespace LIMMA
 
             //Service Initialisation
             Debug.WriteLine("Setting up Services");
-            ConfigurationService configurator = new ConfigurationService();
-            ConnectionService connector = new ConnectionService();
+            configurator = new ConfigurationService();
+            connector = new ConnectionService();
 
 
             //DependencyInjection Init
@@ -139,24 +142,26 @@ namespace LIMMA
                 {
                     case "57562e4a-8d89-47d1-94ae-a0a1feb206f1":
                         SingleValue sv = new SingleValue(mainpageChild.ID,mainpageChild.Model.Settings);
-
-                        //Label l = new Label();
-                        
-                        //l.BackgroundColor = GetColor(mainpageChild.Model.Settings.BackgroundColor);
-                        //l.Text = "1234567890ßßßßßßßßßßßß";
                         root.Children.Add(sv);
                         break;
                 }
             }
 
             generatedMain.Content = root;
-
-            widgetBindings =  GetAllBindings(structure.Tenant.RootNode);
+            NodeBindings nbs = new NodeBindings(new Dictionary<Guid, DataModel>(),new Dictionary<Guid, WidgetBinding>() );
+            widgetBindings =  GetAllBindings(structure.Tenant.RootNode, nbs);
 
 
             MainPage = generatedMain;
 
-            Device.StartTimer(TimeSpan.FromSeconds(5),Tick);
+            Device.StartTimer(TimeSpan.FromSeconds(5), () =>
+            {
+                Task.Factory.StartNew(async () =>
+                {
+                    await Tick();
+                });
+                return true;
+            });
 
             foreach (var child in ((StackLayout)((ContentPage)MainPage).Content).Children)
             {
@@ -164,7 +169,7 @@ namespace LIMMA
                 {
                     if (((SingleValue)child).Name == "c326141e-3e9e-489f-85d2-387208629be0")
                     {
-                        ((SingleValue)child).TextDisplay.Text = "trolololollolollolo";
+                        ((SingleValue)child).TextDisplay.Text = "Hallo Welt!";
                     }
                 }
             }
@@ -172,35 +177,60 @@ namespace LIMMA
 
         }
 
-        private bool Tick()
+        private async Task<bool> Tick()
         {
+
             foreach (var widgetBinding in widgetBindings)
             {
-               foreach (var child in ((StackLayout)((ContentPage)MainPage).Content).Children)
-               {
-                   if (child.GetType() == typeof(SingleValue))
-                   {
-                       if (((SingleValue)child).Name == widgetBinding.WidgetID.ToString())
-                       {
-                           ((SingleValue)child).TextDisplay.Text = DateTime.Now.ToString();
-                       }
-                   }
-               }
+                foreach (var target in widgetBinding.Targets)
+                {
+                    var datamodel = await GetDataModel(target.DatasourceID);
+                }
+               //foreach (var child in ((StackLayout)((ContentPage)MainPage).Content).Children)
+               //{
+               //    if (child.GetType() == typeof(SingleValue))
+               //    {
+               //        if (((SingleValue)child).Name == widgetBinding.WidgetID.ToString())
+               //        {
+               //            ((SingleValue)child).TextDisplay.Text = DateTime.Now.ToString();
+               //        }
+               //    }
+               //}
                 
             }
 
             return true;
         }
 
-        private List<WidgetBinding> GetAllBindings(Node root)
+        private async Task<DataModel> GetDataModel(Guid targetDatasourceID)
+        {
+            DataModel dm = await connector.GetDataModel(targetDatasourceID, configurator);
+
+            return dm;
+        }
+
+        private List<WidgetBinding> GetAllBindings(Node root, NodeBindings nbs)
         {
             List<WidgetBinding> bindings = new List<WidgetBinding>();
 
+            
             var nodebindings = root.NodeDataSources.Bindings;
+            var nodeSources = root.NodeDataSources.Sources;
+
+            if (nodeSources != null)
+            {
+                foreach (var nodeSource in nodeSources)
+                {
+                    DataModel dm = new DataModel();
+                    dm.DatasourceID = Guid.Parse(nodeSource.ID);
+                    dm.SourceTypeID = Guid.Parse(nodeSource.Type);
+                }
+            }
 
             if (nodebindings != null)
             {
-                //NodeBindings nbs = new NodeBindings();
+                
+
                 foreach (var nodebinding in nodebindings)
                 {
                     WidgetBinding wb = new WidgetBinding(Guid.Parse(nodebinding.WidgetID), new List<TargetBinding>
@@ -208,7 +238,7 @@ namespace LIMMA
                         new TargetBinding(Guid.Parse(nodebinding.DataSourceID), Guid.Parse(nodebinding.BindingTargetID),
                             nodebinding.Expression)
                     });
-
+                    nbs.WidgetBindings.Add(wb.WidgetID, wb);
                     bindings.Add(wb);
                 }
             }
@@ -217,7 +247,7 @@ namespace LIMMA
             {
                 foreach (var child in root.Children)
                 {
-                    bindings.AddRange(GetAllBindings(child));
+                    bindings.AddRange(GetAllBindings(child,nbs));
                 }
             }
             

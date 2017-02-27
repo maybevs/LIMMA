@@ -162,7 +162,7 @@ namespace LIMMA.Models
 
     public class NodeDataSources
     {
-        //public List<IDataSource> Sources { get; set; }
+        public List<Sources> Sources { get; set; }
         public List<Binding> Bindings { get; set; }
     }
 }

@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using LIMMA.Helper;
 using LIMMA.Interfaces;
+using LIMMA.Models;
 using Newtonsoft.Json;
 using Xamarin.Forms;
 
@@ -14,11 +16,12 @@ namespace LIMMA.Services
     public class ConnectionService : IConnectionServices
     {
         public UserToken UserToken { get; set; }
+
         public async Task<string> GetConnection(IConfiguration config)
         {
             //var response = await Helper.UserToken.UpdateToken(config);
 
-            
+
 
 
             return "";
@@ -95,7 +98,43 @@ namespace LIMMA.Services
             var structure = AppStructure.GetAppStructure(config);
 
             return structure;
+
+
+        }
+
+        public async Task<DataModel> GetDataModel(Guid DataSourceID, IConfiguration config)
+        {
+            Debug.WriteLine("Datamodel Request: " + DataSourceID.ToString());
+            UserToken token = new UserToken();
+            dynamic savedToken = JsonConvert.DeserializeObject(Application.Current.Properties["Token"].ToString());
+            token.Token = savedToken.Token;
+            token.Expires = savedToken.Expires;
+            token.TokenPrefix = savedToken.TokenPrefix;
+
+            HttpClient client = new HttpClient();
+            client.DefaultRequestHeaders.Add("Authorization", token.TokenPrefix + token.Token);
+            var url = config.BaseUrl + "api/imma/node/" + DataSourceID + "/data";
+            try
+            {
+                var result =
+                await
+                    client.PostAsync(url, null);
+                var readableResponse = await ((StreamContent)result.Content).ReadAsStringAsync();
+                var asdf = (DataModel)JsonConvert.DeserializeObject(readableResponse, typeof(DataModel));
+
+                return asdf;
+            }
+            catch (System.Net.Http.HttpRequestException ex)
+            {
+                Debug.WriteLine("Exception Receiving DataModel:");
+                Debug.WriteLine("- Message:" + ex.Message);
+                Debug.WriteLine("- HasInner:" + ex.InnerException);
+                throw;
+            }
             
+
+            
+
 
         }
     }

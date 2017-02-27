@@ -5,12 +5,12 @@ namespace LIMMA.Interfaces
 {
     public interface IDataSource
     {
-        Guid DatasourceID { get; }
-        Guid SourceTypeID { get; }
-        Guid ProviderID { get; }
-        string AngularService { get; }
-        object Configuration { get; }
-        object Data { get; }
-        QuerySettingsResponse QuerySettingsResponse { get; }
+        Guid DatasourceID { get; set; }
+        Guid SourceTypeID { get; set; }
+        Guid ProviderID { get; set; }
+        string AngularService { get; set; }
+        object Configuration { get; set; }
+        object Data { get; set; }
+        QuerySettingsResponse QuerySettingsResponse { get; set; }
     }
 }
