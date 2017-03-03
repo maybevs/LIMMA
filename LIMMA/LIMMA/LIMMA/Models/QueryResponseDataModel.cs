@@ -4,7 +4,7 @@ using LIMMA.Interfaces;
 namespace LIMMA.Models {
     public class QueryResponseDataModel : DataModel {
         public QueryResponseDataModel(Guid widgetID, Guid targetID, IDataSource datasource/*, DatasourceDataResponse responseData*/)
-            : base(datasource/*, responseData*/) {
+            : base(/*datasource*//*, responseData*/) {
             TargetID = targetID;
             WidgetID = widgetID;
         }

@@ -18,6 +18,8 @@ using Newtonsoft.Json;
 using Prism.Unity;
 using Xamarin.Forms;
 using System.Threading;
+using Microsoft.AspNet.SignalR.Client;
+
 
 namespace LIMMA
 {
@@ -110,6 +112,34 @@ namespace LIMMA
             GenerateMain(structure);
 
 
+            //var hubConnection = new HubConnection("http://demo.m2mgo.com");
+            //hubConnection.Headers.Add("Authorization",token.TokenPrefix + token.Token);
+
+
+            ////hubConnection.Headers.Add("Authorization",token.TokenPrefix + token.Token);
+            //var proxy = hubConnection.CreateHubProxy("cms");
+
+            //QuerySettings.QuerySettings qs = new QuerySettings.QuerySettings();
+            //qs.CurrentPage = 1;
+            
+            
+            //await hubConnection.Start();
+
+            //await proxy.Invoke<Guid>("RegisterPage", "ee59fe53-da64-4345-a349-6b303d5ceb6a",qs);
+
+            //proxy.On<string, string>("datasourceUpdated", (updateType, Values) => updateType)
+
+
+            //Device.StartTimer(TimeSpan.FromSeconds(5), () =>
+            //{
+            //    Task.Factory.StartNew(async () =>
+            //    {
+            //        await Tick();
+            //    });
+            //    return true;
+            //});
+
+
 
         }
 
@@ -135,17 +165,9 @@ namespace LIMMA
              * SingleValue: 57562e4a-8d89-47d1-94ae-a0a1feb206f1
              */
 
-
-            foreach (var mainpageChild in mainpageChildren)
-            {
-                switch (mainpageChild.WidgetTypeID)
-                {
-                    case "57562e4a-8d89-47d1-94ae-a0a1feb206f1":
-                        SingleValue sv = new SingleValue(mainpageChild.ID,mainpageChild.Model.Settings);
-                        root.Children.Add(sv);
-                        break;
-                }
-            }
+            bool hasGrid = false;
+            Dictionary<string,List<Column>> gridDefinitions = new Dictionary<string, List<Column>>();
+            GenerateChildren(mainpageChildren, hasGrid, gridDefinitions, root);
 
             generatedMain.Content = root;
             NodeBindings nbs = new NodeBindings(new Dictionary<Guid, DataModel>(),new Dictionary<Guid, WidgetBinding>() );
@@ -154,14 +176,7 @@ namespace LIMMA
 
             MainPage = generatedMain;
 
-            Device.StartTimer(TimeSpan.FromSeconds(5), () =>
-            {
-                Task.Factory.StartNew(async () =>
-                {
-                    await Tick();
-                });
-                return true;
-            });
+            
 
             foreach (var child in ((StackLayout)((ContentPage)MainPage).Content).Children)
             {
@@ -175,6 +190,92 @@ namespace LIMMA
             }
 
 
+        }
+
+        private void GenerateChildren(List<Widget> mainpageChildren, bool hasGrid, Dictionary<string, List<Column>> gridDefinitions, Layout<View> root)
+        {
+            foreach (var mainpageChild in mainpageChildren)
+            {
+                switch (mainpageChild.WidgetTypeID)
+                {
+                    case "57562e4a-8d89-47d1-94ae-a0a1feb206f1":
+                        SingleValue sv = new SingleValue(mainpageChild.ID, mainpageChild.Model.Settings);
+
+                        if (hasGrid)
+                        {
+                            var gridInfo = CheckGrid(mainpageChild.ID, gridDefinitions);
+                            if (gridInfo != null)
+                            {
+                                Grid grid = (Grid) root;
+
+                                Grid.SetColumn(sv, gridInfo.Offset);
+                                Grid.SetColumnSpan(sv, gridInfo.Span);
+                                grid.Children.Add(sv);
+                                break;
+                            }
+                        }
+
+                        root.Children.Add(sv);
+                        break;
+                    case "9a638f0b-99cd-4312-9b78-0c7872d7cb75":
+                        gridDefinitions.Add(mainpageChild.ID, mainpageChild.Model.Settings.Columns);
+                        hasGrid = true;
+                        DisplayGrid dg = new DisplayGrid(mainpageChild.ID, mainpageChild.Model.Settings);
+                        
+                        GenerateChildren(mainpageChild.Children,true,gridDefinitions,dg.Grid);
+                        root.Children.Add(dg);
+                        break;
+                }
+            }
+        }
+
+        private View FindChild(string id, Type type)
+        {
+            foreach (var child in ((StackLayout) ((ContentPage) MainPage).Content).Children)
+            {
+                if (child.GetType() == type)
+                {
+                    if (type == typeof(SingleValue))
+                    {
+                        if (((SingleValue)child).Name == id)
+                        {
+                            return child;
+                        }
+                    }
+                    else if (type == typeof(DisplayGrid))
+                    {
+                        if (((DisplayGrid)child).Name == id)
+                        {
+                            return child;
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        private ColumnCreationInformation CheckGrid(string id,Dictionary<string, List<Column>> gridDefinitions)
+        {
+            foreach (var gridDefinition in gridDefinitions)
+            {
+                foreach (var column in gridDefinition.Value)
+                {
+                    foreach (var nodeReference in column.Content)
+                    {
+                        if (id == nodeReference.ID)
+                        {
+                            return new ColumnCreationInformation
+                            {
+                                GridID = gridDefinition.Key,
+                                Offset = column.Offset,
+                                Span = column.Span
+                            };
+                        }
+                    }
+                }
+            }
+            return null;
         }
 
         private async Task<bool> Tick()
@@ -223,7 +324,7 @@ namespace LIMMA
                 {
                     DataModel dm = new DataModel();
                     dm.DatasourceID = Guid.Parse(nodeSource.ID);
-                    dm.SourceTypeID = Guid.Parse(nodeSource.Type);
+                    //dm.SourceTypeID = Guid.Parse(nodeSource.Type);
                 }
             }
 

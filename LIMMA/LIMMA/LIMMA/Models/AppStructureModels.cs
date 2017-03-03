@@ -99,6 +99,13 @@ namespace LIMMA.Models
 
     }
 
+    public class ColumnCreationInformation
+    {
+        public string GridID { get; set; }
+        public int Offset { get; set; }
+        public int Span { get; set; }
+    }
+
     public class Column
     {
         public int Offset { get; set; }
