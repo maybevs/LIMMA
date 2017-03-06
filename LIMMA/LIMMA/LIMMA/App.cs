@@ -18,6 +18,7 @@ using Newtonsoft.Json;
 using Prism.Unity;
 using Xamarin.Forms;
 using System.Threading;
+using LIMMA.QuerySettings;
 using Microsoft.AspNet.SignalR.Client;
 
 
@@ -112,20 +113,30 @@ namespace LIMMA
             GenerateMain(structure);
 
 
-            //var hubConnection = new HubConnection("http://demo.m2mgo.com");
+            var deviceBindings = await GetAllDeviceBindings(widgetBindings);
+            
+
+
+
+            var hubConnection = new HubConnection("https://demo.m2mgo.com");
+            hubConnection.Headers.Add("Authorization", token.TokenPrefix + token.Token);
+
+
             //hubConnection.Headers.Add("Authorization",token.TokenPrefix + token.Token);
+            var proxy = hubConnection.CreateHubProxy("cms");
 
-
-            ////hubConnection.Headers.Add("Authorization",token.TokenPrefix + token.Token);
-            //var proxy = hubConnection.CreateHubProxy("cms");
-
-            //QuerySettings.QuerySettings qs = new QuerySettings.QuerySettings();
+            QuerySettings.QuerySettings qs = new QuerySettings.QuerySettings();
             //qs.CurrentPage = 1;
-            
-            
-            //await hubConnection.Start();
+            qs.Parameter = new Dictionary<string, List<string>>();
 
-            //await proxy.Invoke<Guid>("RegisterPage", "ee59fe53-da64-4345-a349-6b303d5ceb6a",qs);
+            hubConnection.Received += HubConnectionOnReceived;
+
+            await hubConnection.Start();
+
+            await proxy.Invoke("registerPage", "ee59fe53-da64-4345-a349-6b303d5ceb6a",qs);
+            SensorDataSaved test;
+            SensorValue[] Values;
+            //proxy.On<SensorDataSaved, Value>("datasourceUpdated", (message, values) => Debug.WriteLine("Data Received:"+message.ToString()));
 
             //proxy.On<string, string>("datasourceUpdated", (updateType, Values) => updateType)
 
@@ -143,7 +154,26 @@ namespace LIMMA
 
         }
 
+        private void HubConnectionOnReceived(string s)
+        {
+            Debug.WriteLine("Data Received");
+            dynamic message = JsonConvert.DeserializeObject(s);
+
+            if (message.M == "datasourceUpdated")
+            {
+                Debug.WriteLine("Datasource Updated");
+
+                dynamic sensordataSaved = message.A;
+
+                Debug.WriteLine(sensordataSaved[1].EventID);
+
+
+            }
+            
+        }
+
         private List<WidgetBinding> widgetBindings;
+        private NodeBindings nbs;
         private void GenerateMain(AppStructure structure)
         {
 
@@ -170,10 +200,11 @@ namespace LIMMA
             GenerateChildren(mainpageChildren, hasGrid, gridDefinitions, root);
 
             generatedMain.Content = root;
-            NodeBindings nbs = new NodeBindings(new Dictionary<Guid, DataModel>(),new Dictionary<Guid, WidgetBinding>() );
+            nbs = new NodeBindings(new Dictionary<Guid, DataModel>(),new Dictionary<Guid, WidgetBinding>() );
+            pageBindings = new Dictionary<DataPage, List<WidgetBinding>>();
             widgetBindings =  GetAllBindings(structure.Tenant.RootNode, nbs);
 
-
+            
             MainPage = generatedMain;
 
             
@@ -190,6 +221,25 @@ namespace LIMMA
             }
 
 
+        }
+
+        private async Task<object> GetAllDeviceBindings(List<WidgetBinding> list)
+        {
+            Dictionary<Guid,Guid> bindings = new Dictionary<Guid, Guid>();
+            foreach (var widgetBinding in list)
+            {
+                foreach (var widgetBindingTarget in widgetBinding.Targets)
+                {
+                    var dm = await GetDataModel(widgetBindingTarget.DatasourceID);
+                    if (dm != null)
+                    {
+                        dynamic whatIreallyneed = JsonConvert.DeserializeObject(dm.Data.ToString());
+                    }
+                }
+            }
+
+
+            return null;
         }
 
         private void GenerateChildren(List<Widget> mainpageChildren, bool hasGrid, Dictionary<string, List<Column>> gridDefinitions, Layout<View> root)
@@ -310,6 +360,8 @@ namespace LIMMA
             return dm;
         }
 
+        private Dictionary<DataPage, List<WidgetBinding>> pageBindings;
+
         private List<WidgetBinding> GetAllBindings(Node root, NodeBindings nbs)
         {
             List<WidgetBinding> bindings = new List<WidgetBinding>();
@@ -351,7 +403,7 @@ namespace LIMMA
                     bindings.AddRange(GetAllBindings(child,nbs));
                 }
             }
-            
+            pageBindings.Add(new DataPage {NodeID = Guid.Parse(root.Id), PageID = Guid.Parse(root.PageID)}, bindings);
             return bindings;
         }
 
@@ -361,4 +413,9 @@ namespace LIMMA
         }
     }
 
+    internal class DataPage
+    {
+        public Guid PageID { get; set; }
+        public Guid NodeID { get; set; }
+    }
 }

@@ -56,10 +56,15 @@
     <Compile Include="Models\TargetBinding.cs" />
     <Compile Include="Models\WidgetBinding.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QuerySettings\DeviceIdentifier.cs" />
+    <Compile Include="QuerySettings\DeviceSensorIdentifier.cs" />
     <Compile Include="QuerySettings\FilterComparer.cs" />
     <Compile Include="QuerySettings\FilterCondition.cs" />
     <Compile Include="QuerySettings\QuerySettings.cs" />
     <Compile Include="QuerySettings\QuerySettingsResponse.cs" />
+    <Compile Include="QuerySettings\SensorDataSaved.cs" />
+    <Compile Include="QuerySettings\SensorValue.cs" />
+    <Compile Include="QuerySettings\SensorValueSeries.cs" />
     <Compile Include="QuerySettings\SortDirection.cs" />
     <Compile Include="QuerySettings\Sorting.cs" />
     <Compile Include="Services\ConfigurationService.cs" />

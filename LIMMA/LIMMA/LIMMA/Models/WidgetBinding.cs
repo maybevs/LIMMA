@@ -11,4 +11,9 @@ namespace LIMMA.Models {
         public Guid WidgetID { get; private set; }
         public IEnumerable<TargetBinding> Targets { get; private set; }
     }
+
+    public class DeviceBinding
+    {
+        
+    }
 }
