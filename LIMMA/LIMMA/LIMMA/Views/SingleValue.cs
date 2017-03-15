@@ -21,7 +21,7 @@ namespace LIMMA.Views
             TextDisplay = new Label();
             TextDisplay.BackgroundColor = AppStructureHelpers.GetColor(Settings.BackgroundColor);
             TextDisplay.Text = "1234567890ßßßßßßßßßßßß";
-
+            TextDisplay.HorizontalTextAlignment = TextAlignment.End;
 
 
             Content = TextDisplay;

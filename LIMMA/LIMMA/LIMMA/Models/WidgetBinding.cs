@@ -14,6 +14,10 @@ namespace LIMMA.Models {
 
     public class DeviceBinding
     {
-        
+        public Guid DeviceId { get; set; }
+        public Guid PageId { get; set; }
+        public Guid NodeId { get; set; }
+        public Guid WidgetId { get; set; }
+
     }
 }

@@ -20,6 +20,7 @@ using Xamarin.Forms;
 using System.Threading;
 using LIMMA.QuerySettings;
 using Microsoft.AspNet.SignalR.Client;
+using Newtonsoft.Json.Linq;
 
 
 namespace LIMMA
@@ -112,8 +113,13 @@ namespace LIMMA
 
             GenerateMain(structure);
 
+            deviceBindings = await GetAllDeviceBindings(widgetBindings);
 
-            var deviceBindings = await GetAllDeviceBindings(widgetBindings);
+
+            foreach (var pageBinding in pageBindings)
+            {
+                var dm = await GetDataModel(pageBinding.Key.NodeID);
+            }
             
 
 
@@ -122,7 +128,7 @@ namespace LIMMA
             hubConnection.Headers.Add("Authorization", token.TokenPrefix + token.Token);
 
 
-            //hubConnection.Headers.Add("Authorization",token.TokenPrefix + token.Token);
+            
             var proxy = hubConnection.CreateHubProxy("cms");
 
             QuerySettings.QuerySettings qs = new QuerySettings.QuerySettings();
@@ -140,18 +146,6 @@ namespace LIMMA
 
             //proxy.On<string, string>("datasourceUpdated", (updateType, Values) => updateType)
 
-
-            //Device.StartTimer(TimeSpan.FromSeconds(5), () =>
-            //{
-            //    Task.Factory.StartNew(async () =>
-            //    {
-            //        await Tick();
-            //    });
-            //    return true;
-            //});
-
-
-
         }
 
         private void HubConnectionOnReceived(string s)
@@ -163,17 +157,91 @@ namespace LIMMA
             {
                 Debug.WriteLine("Datasource Updated");
 
-                dynamic sensordataSaved = message.A;
+                var sensordataSaved = message.A;
+                var blubb = sensordataSaved[1];
+                var value = blubb.SensorValueSeries[0].Values[0].Value;
+                var deviceID = blubb.SensorValueSeries[0].Values[0].DeviceIdentifier.ID;
 
-                Debug.WriteLine(sensordataSaved[1].EventID);
+                UpdateDisplay(deviceID, value);
+
+                //Debug.WriteLine(sensordataSaved[1].EventID);
 
 
             }
             
         }
 
+        private void UpdateDisplay(object deviceID, object value)
+        {
+            foreach (var devicebinding in deviceBindings)
+            {
+                if (devicebinding.DeviceId == Guid.Parse(deviceID.ToString()))
+                {
+                    foreach (var child in ((StackLayout)((ContentPage)MainPage).Content).Children)
+                    {
+                        if (child.GetType() == typeof(SingleValue))
+                        {
+                            if (((SingleValue)child).Name == devicebinding.WidgetId.ToString())
+                            {
+                                Device.BeginInvokeOnMainThread(() => ((SingleValue)child).TextDisplay.Text = value.ToString());
+
+                            }
+                        }
+                        if (child.GetType() == typeof(DisplayGrid))
+                        {
+                            foreach (var gridChild in ((DisplayGrid)child).Grid.Children)
+                            {
+                                if (gridChild.GetType() == typeof(SingleValue))
+                                {
+                                    if (((SingleValue)gridChild).Name == devicebinding.WidgetId.ToString())
+                                    {
+                                        Device.BeginInvokeOnMainThread(() => ((SingleValue)gridChild).TextDisplay.Text = value.ToString());
+
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+
+
+                //foreach (var target in widgetBinding.Targets)
+                //{
+                //    var datamodel = await GetDataModel(target.DatasourceID);
+                //}
+                //foreach (var child in ((StackLayout)((ContentPage)MainPage).Content).Children)
+                //{
+                //    if (child.GetType() == typeof(SingleValue))
+                //    {
+                //        if (((SingleValue)child).Name == widgetBinding.WidgetID.ToString())
+                //        {
+                //            Device.BeginInvokeOnMainThread(() => ((SingleValue)child).TextDisplay.Text = value.ToString());
+                            
+                //        }
+                //    }
+                //    if (child.GetType() == typeof(DisplayGrid))
+                //    {
+                //        foreach (var gridChild in ((DisplayGrid)child).Grid.Children)
+                //        {
+                //            if (gridChild.GetType() == typeof(SingleValue))
+                //            {
+                //                if (((SingleValue)gridChild).Name == widgetBinding.WidgetID.ToString())
+                //                {
+                //                    Device.BeginInvokeOnMainThread(() => ((SingleValue)gridChild).TextDisplay.Text = value.ToString());
+
+                //                }
+                //            }
+                //        }
+                //    }
+                //}
+
+            }
+        }
+
         private List<WidgetBinding> widgetBindings;
         private NodeBindings nbs;
+        private List<DeviceBinding> deviceBindings;
         private void GenerateMain(AppStructure structure)
         {
 
@@ -185,29 +253,29 @@ namespace LIMMA
             StackLayout root = new StackLayout();
             root.Orientation = StackOrientation.Vertical;
 
+
+            //Todo: Add recursiveness here to generate multiple pages.
             var mainpageChildren =
                 structure.Tenant.RootNode.Children.FirstOrDefault().Children.FirstOrDefault().Page.RootWidget.Children;
+            Guid nodeID = Guid.Parse(structure.Tenant.RootNode.Children.FirstOrDefault().Children.FirstOrDefault().Id);
 
 
-            /*
-             * WidgetTypes:
-             * Navigation: 3cb0c700-5b55-4563-81f5-576e1a31271a
-             * SingleValue: 57562e4a-8d89-47d1-94ae-a0a1feb206f1
-             */
 
+            deviceBindings = new List<DeviceBinding>();
             bool hasGrid = false;
             Dictionary<string,List<Column>> gridDefinitions = new Dictionary<string, List<Column>>();
-            GenerateChildren(mainpageChildren, hasGrid, gridDefinitions, root);
+            GenerateChildren(mainpageChildren, hasGrid, gridDefinitions, root, nodeID);
 
             generatedMain.Content = root;
             nbs = new NodeBindings(new Dictionary<Guid, DataModel>(),new Dictionary<Guid, WidgetBinding>() );
             pageBindings = new Dictionary<DataPage, List<WidgetBinding>>();
             widgetBindings =  GetAllBindings(structure.Tenant.RootNode, nbs);
+            
 
             
             MainPage = generatedMain;
 
-            
+
 
             foreach (var child in ((StackLayout)((ContentPage)MainPage).Content).Children)
             {
@@ -223,34 +291,67 @@ namespace LIMMA
 
         }
 
-        private async Task<object> GetAllDeviceBindings(List<WidgetBinding> list)
+        private Guid GetNodeIDfromPageID(Guid guid)
         {
-            Dictionary<Guid,Guid> bindings = new Dictionary<Guid, Guid>();
-            foreach (var widgetBinding in list)
+            return pageBindings.Where(pb => pb.Key.PageID == guid).Select(pb => pb.Key.NodeID).FirstOrDefault();
+        }
+
+        private Guid GetPageIDfromNodeID(Guid guid)
+        {
+            return pageBindings.Where(pb => pb.Key.NodeID == guid).Select(pb => pb.Key.PageID).FirstOrDefault();
+        }
+
+
+        private async Task<List<DeviceBinding>> GetAllDeviceBindings(List<WidgetBinding> list)
+        {
+            foreach (var deviceBinding in deviceBindings)
             {
-                foreach (var widgetBindingTarget in widgetBinding.Targets)
-                {
-                    var dm = await GetDataModel(widgetBindingTarget.DatasourceID);
-                    if (dm != null)
-                    {
-                        dynamic whatIreallyneed = JsonConvert.DeserializeObject(dm.Data.ToString());
-                    }
-                }
+                var dm = await GetDataModel(deviceBinding.NodeId);
+                deviceBinding.DeviceId = dm;
             }
 
 
-            return null;
+
+
+            //Dictionary<Guid,Guid> bindings = new Dictionary<Guid, Guid>();
+            //foreach (var widgetBinding in list)
+            //{
+            //    foreach (var widgetBindingTarget in widgetBinding.Targets)
+            //    {
+            //        var dm = await GetDataModel(widgetBindingTarget.DatasourceID);
+            //        if (dm != null)
+            //        {
+            //            dynamic whatIreallyneed = JsonConvert.DeserializeObject(dm.Data.ToString());
+            //        }
+            //    }
+            //}
+
+
+            return deviceBindings;
         }
 
-        private void GenerateChildren(List<Widget> mainpageChildren, bool hasGrid, Dictionary<string, List<Column>> gridDefinitions, Layout<View> root)
+        private void GenerateChildren(List<Widget> mainpageChildren, bool hasGrid, Dictionary<string, List<Column>> gridDefinitions, Layout<View> root, Guid nodeId)
         {
+            
             foreach (var mainpageChild in mainpageChildren)
             {
+
+             /*
+             * WidgetTypes:
+             * Navigation: 3cb0c700-5b55-4563-81f5-576e1a31271a
+             * SingleValue: 57562e4a-8d89-47d1-94ae-a0a1feb206f1
+             */
                 switch (mainpageChild.WidgetTypeID)
                 {
                     case "57562e4a-8d89-47d1-94ae-a0a1feb206f1":
                         SingleValue sv = new SingleValue(mainpageChild.ID, mainpageChild.Model.Settings);
+                        DeviceBinding db = new DeviceBinding();
+                        db.WidgetId = Guid.Parse(mainpageChild.ID);
+                        db.PageId = Guid.Parse(mainpageChild.ParentID);
+                        db.NodeId = nodeId;
+                        deviceBindings.Add(db);
 
+                        
                         if (hasGrid)
                         {
                             var gridInfo = CheckGrid(mainpageChild.ID, gridDefinitions);
@@ -272,7 +373,7 @@ namespace LIMMA
                         hasGrid = true;
                         DisplayGrid dg = new DisplayGrid(mainpageChild.ID, mainpageChild.Model.Settings);
                         
-                        GenerateChildren(mainpageChild.Children,true,gridDefinitions,dg.Grid);
+                        GenerateChildren(mainpageChild.Children,true,gridDefinitions,dg.Grid, nodeId);
                         root.Children.Add(dg);
                         break;
                 }
@@ -353,9 +454,9 @@ namespace LIMMA
             return true;
         }
 
-        private async Task<DataModel> GetDataModel(Guid targetDatasourceID)
+        private async Task<Guid> GetDataModel(Guid targetDatasourceID)
         {
-            DataModel dm = await connector.GetDataModel(targetDatasourceID, configurator);
+            Guid dm = await connector.GetDeviceIdFromDataModel(targetDatasourceID, configurator);
 
             return dm;
         }
